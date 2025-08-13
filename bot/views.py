@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+import vonage
+
 import json
 # Create your views here.
 
@@ -21,3 +23,19 @@ def webhook(request):
 
         return JsonResponse({"text": response_text})
     return JsonResponse({"status": "Webhook actif"})
+
+
+def send_whatsapp_message(to_number, text):
+    client = vonage.Client(application_id="TON_APP_ID", private_key="TON_CLE.key")
+    whatsapp = vonage.Messages(client)
+
+    whatsapp.send_message({
+        "to": to_number,
+        "from": "TON_NUMERO_WHATSAPP",
+        "message": {
+            "content": {
+                "type": "text",
+                "text": text
+            }
+        }
+    })
