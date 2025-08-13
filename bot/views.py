@@ -24,14 +24,28 @@ def webhook(request):
         return JsonResponse({"text": response_text})
     return JsonResponse({"status": "Webhook actif"})
 
+@csrf_exempt
+def status_webhook(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        message_id = data.get("message_uuid", "")
+        status = data.get("status", "")
+        to_number = data.get("to", "")
+
+        print(f"Statut du message {message_id} vers {to_number} : {status}")
+
+        return JsonResponse({"status": "ok"})
+    return JsonResponse({"status": "Webhook actif"})
+
+
 
 def send_whatsapp_message(to_number, text):
-    client = vonage.Client(application_id="TON_APP_ID", private_key="TON_CLE.key")
+    client = vonage.Client(application_id="913eb743-d029-463b-a4d3-a15451805827", private_key="b86393e9")
     whatsapp = vonage.Messages(client)
 
     whatsapp.send_message({
-        "to": to_number,
-        "from": "TON_NUMERO_WHATSAPP",
+        "to": +22892596583,
+        "from": "+14157386102",
         "message": {
             "content": {
                 "type": "text",
