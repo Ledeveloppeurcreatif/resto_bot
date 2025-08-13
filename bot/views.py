@@ -40,7 +40,7 @@ def status_webhook(request):
 
 
 def send_whatsapp_message(to_number, text):
-    client = vonage.Client(application_id="913eb743-d029-463b-a4d3-a15451805827", private_key="b86393e9")
+    client = vonage.Client(application_id="9540d430-f9fd-44db-ad68-c13df17462a2", private_key="b86393e9")
     whatsapp = vonage.Messages(client)
 
     whatsapp.send_message({
