@@ -22,21 +22,21 @@ def bot(request):
     print(f"Headers: {dict(request.headers)}")
     print(f"Body: {request.body}")
     print(f"=====================")
-    
+   
     # Vérifier si la requête contient du JSON
     if request.method == 'POST' and request.body:
         try:
             data = json.loads(request.body.decode('utf-8'))
             print(f"Données JSON reçues: {data}")
-            
+           
             message = data.get('text', '')
             sender_name = data.get('profile', {}).get('name', 'Client')
             sender_number = data.get('from', '')
-            
+           
             print(f"Message: {message}")
             print(f"Expéditeur: {sender_name}")
             print(f"Numéro: {sender_number}")
-            
+           
         except json.JSONDecodeError as e:
             print(f"Erreur JSON: {e}")
             return HttpResponse("Erreur: Données JSON invalides", status=400)
@@ -44,45 +44,91 @@ def bot(request):
         # Si ce n'est pas une requête POST ou si le corps est vide
         print("Requête GET ou corps vide - affichage de la page d'accueil")
         return HttpResponse("Bot WhatsApp e-pinta restaurant est actif!", status=200)
-    
+   
     if message.lower() == "menu":
-        # Messages API pour WhatsApp dans Vonage 4.x
+        # Essayer plusieurs formats jusqu'à ce que l'un fonctionne
+        message_text = "Bienvenue chez e-pinta restaurant {} ! voilà notre menu:\n1. Pate + baobab".format(sender_name)
+        
+        # Format 1: Structure custom (recommandé par certaines docs)
         try:
             response = client.messages.send({
-                "from": "14157386102",  # Votre numéro WhatsApp Business (sans le +)
+                "from": "14157386102",
                 "to": sender_number,
                 "channel": "whatsapp",
-                "message_type": "text",
-                "text": "Bienvenue chez e-pinta restaurant {} ! voilà notre menu:\n1. Pate + baobab".format(sender_name)
+                "message_type": "custom",
+                "custom": {
+                    "type": "text",
+                    "text": {
+                        "body": message_text
+                    }
+                }
             })
-            print(f"Message envoyé: {response}")
+            print(f"Message envoyé avec format custom: {response}")
         except Exception as e:
-            print(f"Erreur envoi message: {e}")
-    
+            print(f"Erreur format custom: {e}")
+            
+            # Format 2: Structure text simple
+            try:
+                response = client.messages.send({
+                    "from": "14157386102",
+                    "to": sender_number,
+                    "channel": "whatsapp",
+                    "message_type": "text",
+                    "text": {
+                        "body": message_text
+                    }
+                })
+                print(f"Message envoyé avec format text/body: {response}")
+            except Exception as e:
+                print(f"Erreur format text/body: {e}")
+                
+                # Format 3: Structure directe (dernière tentative)
+                try:
+                    response = client.messages.send({
+                        "from": "14157386102",
+                        "to": sender_number,
+                        "channel": "whatsapp",
+                        "text": message_text
+                    })
+                    print(f"Message envoyé avec format direct: {response}")
+                except Exception as e:
+                    print(f"Erreur format direct: {e}")
+                    print("Tous les formats ont échoué!")
+   
     elif message.lower() == "bonjour" or message.lower() == "salut":
         try:
             response = client.messages.send({
                 "from": "14157386102",
                 "to": sender_number,
                 "channel": "whatsapp",
-                "message_type": "text",
-                "text": "Bonjour {} ! Bienvenue chez e-pinta restaurant. Tapez 'menu' pour voir nos plats.".format(sender_name)
+                "message_type": "custom",
+                "custom": {
+                    "type": "text",
+                    "text": {
+                        "body": "Bonjour {} ! Bienvenue chez e-pinta restaurant. Tapez 'menu' pour voir nos plats.".format(sender_name)
+                    }
+                }
             })
             print(f"Message envoyé: {response}")
         except Exception as e:
             print(f"Erreur envoi message: {e}")
-    
+   
     elif message.lower() == "aide" or message.lower() == "help":
         try:
             response = client.messages.send({
                 "from": "14157386102",
                 "to": sender_number,
                 "channel": "whatsapp",
-                "message_type": "text",
-                "text": "Voici les commandes disponibles:\n- 'menu' : Voir notre carte\n- 'bonjour' : Salutation\n- 'aide' : Cette liste"
+                "message_type": "custom",
+                "custom": {
+                    "type": "text",
+                    "text": {
+                        "body": "Voici les commandes disponibles:\n- 'menu' : Voir notre carte\n- 'bonjour' : Salutation\n- 'aide' : Cette liste"
+                    }
+                }
             })
             print(f"Message envoyé: {response}")
         except Exception as e:
             print(f"Erreur envoi message: {e}")
-    
+   
     return HttpResponse("Bonjour! Votre message a été reçu.")
