@@ -1,9 +1,8 @@
 from django.urls import path
-from .views import webhook
-from .views import status_webhook
+from .views import bot
 
 
 urlpatterns = [
-    path('webhook/', webhook),
-    path('status/', status_webhook)
+    path('', bot),
+    #path('status/', status_webhook)
 ]
