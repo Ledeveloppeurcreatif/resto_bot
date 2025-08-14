@@ -48,11 +48,37 @@ def bot(request):
     if message.lower() == "menu":
         # Messages API pour WhatsApp dans Vonage 4.x
         try:
-            response = client.messages.send_message({
+            response = client.messages.send({
                 "from": "+14157386102",  # Votre numéro WhatsApp Business
                 "to": sender_number,
                 "message_type": "text",
                 "text": "Bienvenue chez e-pinta restaurant {} ! voilà notre menu:\n1. Pate + baobab".format(sender_name),
+                "channel": "whatsapp"
+            })
+            print(f"Message envoyé: {response}")
+        except Exception as e:
+            print(f"Erreur envoi message: {e}")
+    
+    elif message.lower() == "bonjour" or message.lower() == "salut":
+        try:
+            response = client.messages.send({
+                "from": "+14157386102",
+                "to": sender_number,
+                "message_type": "text",
+                "text": "Bonjour {} ! Bienvenue chez e-pinta restaurant. Tapez 'menu' pour voir nos plats.".format(sender_name),
+                "channel": "whatsapp"
+            })
+            print(f"Message envoyé: {response}")
+        except Exception as e:
+            print(f"Erreur envoi message: {e}")
+    
+    elif message.lower() == "aide" or message.lower() == "help":
+        try:
+            response = client.messages.send({
+                "from": "+14157386102",
+                "to": sender_number,
+                "message_type": "text",
+                "text": "Voici les commandes disponibles:\n- 'menu' : Voir notre carte\n- 'bonjour' : Salutation\n- 'aide' : Cette liste",
                 "channel": "whatsapp"
             })
             print(f"Message envoyé: {response}")
