@@ -1,107 +1,67 @@
 import os
-from django.http import HttpResponse
-from vonage import Vonage, Auth
 import json
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from vonage import Vonage, Auth
+from vonage_messages import WhatsappText
 
-# Configuration Vonage pour WhatsApp
-api_key = 'b86393e9'
-api_secret = 'zEKWLvneh75ocpMD'
-application_id = '9540d430-f9fd-44db-ad68-c13df17462a2'
-private_key_path = os.path.join(settings.BASE_DIR, 'private_key.key')
+# Configuration minimale (mettez vos vraies valeurs ou utilisez des variables d'environnement)
+VONAGE_APPLICATION_ID = os.getenv('VONAGE_APPLICATION_ID', '9540d430-f9fd-44db-ad68-c13df17462a2')
+VONAGE_PRIVATE_KEY = os.getenv('VONAGE_PRIVATE_KEY', os.path.join(settings.BASE_DIR, 'private_key.key'))
+WHATSAPP_SENDER_ID = os.getenv('WHATSAPP_SENDER_ID', '14157386102')  # sans le +
 
-# Initialisation du client Vonage avec les credentials d'application
-auth = Auth(api_key, api_secret)
-client = Vonage(auth)
+def get_vonage_client() -> Vonage:
+    """Create a Vonage client using a private key path or private key content.
+
+    Prefers the path provided by VONAGE_PRIVATE_KEY when it exists on disk.
+    Otherwise tries VONAGE_PRIVATE_KEY_CONTENT (PEM content).
+    """
+    private_key_input = VONAGE_PRIVATE_KEY
+    private_key: bytes | str
+
+    # If the env var points to an existing file, use the path directly
+    if isinstance(private_key_input, str) and os.path.isfile(private_key_input):
+        private_key = private_key_input
+    else:
+        # Fallback to PEM content from env var
+        private_key_content = os.getenv('VONAGE_PRIVATE_KEY_CONTENT')
+        if not private_key_content:
+            raise FileNotFoundError(
+                f"Clé privée introuvable. Fournissez un fichier à '{private_key_input}' ou définissez VONAGE_PRIVATE_KEY_CONTENT."
+            )
+        private_key = private_key_content.encode('utf-8')
+
+    return Vonage(Auth(application_id=VONAGE_APPLICATION_ID, private_key=private_key))
+
 
 @csrf_exempt
 def bot(request):
-    print(f"=== REQUÊTE REÇUE ===")
-    print(f"Méthode: {request.method}")
-    print(f"Headers: {dict(request.headers)}")
-    print(f"Body: {request.body}")
-    print(f"=====================")
-   
-    # Vérifier si la requête contient du JSON
-    if request.method == 'POST' and request.body:
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            print(f"Données JSON reçues: {data}")
-           
-            message = data.get('text', '')
-            sender_name = data.get('profile', {}).get('name', 'Client')
-            sender_number = data.get('from', '')
-           
-            print(f"Message: {message}")
-            print(f"Expéditeur: {sender_name}")
-            print(f"Numéro: {sender_number}")
-           
-        except json.JSONDecodeError as e:
-            print(f"Erreur JSON: {e}")
-            return HttpResponse("Erreur: Données JSON invalides", status=400)
-    else:
-        # Si ce n'est pas une requête POST ou si le corps est vide
-        print("Requête GET ou corps vide - affichage de la page d'accueil")
-        return HttpResponse("Bot WhatsApp e-pinta restaurant est actif!", status=200)
+	# Healthcheck simple
+	if request.method != 'POST' or not request.body:
+		return HttpResponse('OK', status=200)
 
-    # Fonction helper pour envoyer un message WhatsApp
-    def send_whatsapp_message(to_number, message_text):
-        try:
-            # Format moderne pour WhatsApp avec Vonage - sans message_type
-            response = client.messages.send({
-                "from": "14157386102",
-                "to": to_number,
-                "channel": "whatsapp",
-                "content": {
-                    "type": "text",
-                    "text": message_text
-                }
-            })
-            print(f"Message envoyé avec succès: {response}")
-            return True
-        except Exception as e:
-            print(f"Erreur format content: {e}")
-            
-            # Fallback: essayer l'ancien format
-            try:
-                response = client.messages.send({
-                    "from": "14157386102",
-                    "to": to_number,
-                    "channel": "whatsapp",
-                    "text": {
-                        "body": message_text
-                    }
-                })
-                print(f"Message envoyé avec format fallback: {response}")
-                return True
-            except Exception as e2:
-                print(f"Erreur format fallback: {e2}")
-                
-                # Dernier essai: format minimal
-                try:
-                    response = client.messages.send({
-                        "from": "14157386102",
-                        "to": to_number,
-                        "channel": "whatsapp",
-                        "text": message_text
-                    })
-                    print(f"Message envoyé avec format minimal: {response}")
-                    return True
-                except Exception as e3:
-                    print(f"Tous les formats ont échoué: {e3}")
-                    return False
-   
-    if message.lower() == "menu":
-        message_text = "Bienvenue chez e-pinta restaurant {} ! voilà notre menu:\n1. Pate + baobab".format(sender_name)
-        send_whatsapp_message(sender_number, message_text)
-   
-    elif message.lower() == "bonjour" or message.lower() == "salut":
-        message_text = "Bonjour {} ! Bienvenue chez e-pinta restaurant. Tapez 'menu' pour voir nos plats.".format(sender_name)
-        send_whatsapp_message(sender_number, message_text)
-   
-    elif message.lower() == "aide" or message.lower() == "help":
-        message_text = "Voici les commandes disponibles:\n- 'menu' : Voir notre carte\n- 'bonjour' : Salutation\n- 'aide' : Cette liste"
-        send_whatsapp_message(sender_number, message_text)
-   
-    return HttpResponse("Bonjour! Votre message a été reçu.")
+	# Parse du JSON entrant (webhook Vonage)
+	try:
+		data = json.loads(request.body.decode('utf-8'))
+	except json.JSONDecodeError:
+		return HttpResponse('Bad Request', status=400)
+
+	incoming_text = (data.get('text') or '').strip().lower()
+	to_number = data.get('from')
+	if not to_number:
+		return HttpResponse('OK', status=200)
+
+	reply_text = "Bienvenue chez e-pinta ! Tapez 'menu' pour voir nos plats."
+	if incoming_text == 'menu':
+		reply_text = "Bienvenue chez e-pinta !\nMenu:\n1. Pate + baobab"
+
+	# Envoi de la réponse WhatsApp
+	try:
+		client = get_vonage_client()
+		msg = WhatsappText(to=to_number, from_=WHATSAPP_SENDER_ID, text=reply_text)
+		client.messages.send(msg)
+	except Exception as e:
+		print(f"Envoi échoué: {e}")
+
+	return HttpResponse('OK', status=200)
