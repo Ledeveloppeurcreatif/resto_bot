@@ -3,6 +3,6 @@ from .views import bot
 
 
 urlpatterns = [
-    path('', bot),
+    path('webhook/', bot),
     #path('status/', status_webhook)
 ]
