@@ -49,11 +49,11 @@ def bot(request):
         # Messages API pour WhatsApp dans Vonage 4.x
         try:
             response = client.messages.send({
-                "from": "+14157386102",  # Votre numéro WhatsApp Business
+                "from": "14157386102",  # Votre numéro WhatsApp Business (sans le +)
                 "to": sender_number,
-                "type": "text",
-                "text": "Bienvenue chez e-pinta restaurant {} ! voilà notre menu:\n1. Pate + baobab".format(sender_name),
-                "channel": "whatsapp"
+                "channel": "whatsapp",
+                "message_type": "text",
+                "text": "Bienvenue chez e-pinta restaurant {} ! voilà notre menu:\n1. Pate + baobab".format(sender_name)
             })
             print(f"Message envoyé: {response}")
         except Exception as e:
@@ -62,11 +62,11 @@ def bot(request):
     elif message.lower() == "bonjour" or message.lower() == "salut":
         try:
             response = client.messages.send({
-                "from": "+14157386102",
+                "from": "14157386102",
                 "to": sender_number,
-                "type": "text",
-                "text": "Bonjour {} ! Bienvenue chez e-pinta restaurant. Tapez 'menu' pour voir nos plats.".format(sender_name),
-                "channel": "whatsapp"
+                "channel": "whatsapp",
+                "message_type": "text",
+                "text": "Bonjour {} ! Bienvenue chez e-pinta restaurant. Tapez 'menu' pour voir nos plats.".format(sender_name)
             })
             print(f"Message envoyé: {response}")
         except Exception as e:
@@ -75,11 +75,11 @@ def bot(request):
     elif message.lower() == "aide" or message.lower() == "help":
         try:
             response = client.messages.send({
-                "from": "+14157386102",
+                "from": "14157386102",
                 "to": sender_number,
-                "type": "text",
-                "text": "Voici les commandes disponibles:\n- 'menu' : Voir notre carte\n- 'bonjour' : Salutation\n- 'aide' : Cette liste",
-                "channel": "whatsapp"
+                "channel": "whatsapp",
+                "message_type": "text",
+                "text": "Voici les commandes disponibles:\n- 'menu' : Voir notre carte\n- 'bonjour' : Salutation\n- 'aide' : Cette liste"
             })
             print(f"Message envoyé: {response}")
         except Exception as e:
