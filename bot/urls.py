@@ -3,5 +3,5 @@ from .views import bot
 
 
 urlpatterns = [
-    path('webhook/', bot),
+    path('', bot),
 ]
