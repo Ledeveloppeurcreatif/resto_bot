@@ -17,18 +17,32 @@ client = Vonage(auth)
 
 @csrf_exempt
 def bot(request):
+    print(f"=== REQUÊTE REÇUE ===")
+    print(f"Méthode: {request.method}")
+    print(f"Headers: {dict(request.headers)}")
+    print(f"Body: {request.body}")
+    print(f"=====================")
+    
     # Vérifier si la requête contient du JSON
     if request.method == 'POST' and request.body:
         try:
             data = json.loads(request.body.decode('utf-8'))
+            print(f"Données JSON reçues: {data}")
             
             message = data.get('text', '')
             sender_name = data.get('profile', {}).get('name', 'Client')
             sender_number = data.get('from', '')
-        except json.JSONDecodeError:
+            
+            print(f"Message: {message}")
+            print(f"Expéditeur: {sender_name}")
+            print(f"Numéro: {sender_number}")
+            
+        except json.JSONDecodeError as e:
+            print(f"Erreur JSON: {e}")
             return HttpResponse("Erreur: Données JSON invalides", status=400)
     else:
         # Si ce n'est pas une requête POST ou si le corps est vide
+        print("Requête GET ou corps vide - affichage de la page d'accueil")
         return HttpResponse("Bot WhatsApp e-pinta restaurant est actif!", status=200)
     
     if message.lower() == "menu":
