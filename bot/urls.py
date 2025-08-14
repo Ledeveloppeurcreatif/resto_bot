@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import bot, health_check
+from .views import bot
 
 
 urlpatterns = [
