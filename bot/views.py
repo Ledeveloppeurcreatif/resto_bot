@@ -51,7 +51,7 @@ def bot(request):
             response = client.messages.send({
                 "from": "+14157386102",  # Votre numéro WhatsApp Business
                 "to": sender_number,
-                "message_type": "text",
+                "type": "text",
                 "text": "Bienvenue chez e-pinta restaurant {} ! voilà notre menu:\n1. Pate + baobab".format(sender_name),
                 "channel": "whatsapp"
             })
@@ -64,7 +64,7 @@ def bot(request):
             response = client.messages.send({
                 "from": "+14157386102",
                 "to": sender_number,
-                "message_type": "text",
+                "type": "text",
                 "text": "Bonjour {} ! Bienvenue chez e-pinta restaurant. Tapez 'menu' pour voir nos plats.".format(sender_name),
                 "channel": "whatsapp"
             })
@@ -77,7 +77,7 @@ def bot(request):
             response = client.messages.send({
                 "from": "+14157386102",
                 "to": sender_number,
-                "message_type": "text",
+                "type": "text",
                 "text": "Voici les commandes disponibles:\n- 'menu' : Voir notre carte\n- 'bonjour' : Salutation\n- 'aide' : Cette liste",
                 "channel": "whatsapp"
             })
