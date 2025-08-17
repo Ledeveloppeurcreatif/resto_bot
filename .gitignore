@@ -1,5 +1,4 @@
 # Variables d'environnement
-.env
 .env.local
 .env.production
 
@@ -89,7 +88,6 @@ celerybeat-schedule
 
 # Environments
 .venv
-env/
 venv/
 ENV/
 env.bak/
