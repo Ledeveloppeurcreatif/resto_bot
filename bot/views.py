@@ -5,18 +5,8 @@ from django.http import HttpResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 
-# Récupération des variables d'environnement Twilio
-account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-whatsapp_number = os.getenv('TWILIO_WHATSAPP_NUMBER')
-
-# Vérification que les variables d'environnement sont définies
-if not account_sid or not auth_token or not whatsapp_number:
-    raise ValueError(
-        "Variables d'environnement Twilio manquantes. "
-        "Veuillez définir TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_WHATSAPP_NUMBER dans votre fichier .env"
-    )
-
+account_sid ="AC3148c104d32bcba312db227f955357de"
+auth_token = "9f07aaa8dc0b0c1df1a6d23649df20d4"
 client = Client(account_sid, auth_token)
 
 # Etat utilisateur en mémoire (clé: numéro WhatsApp "From")
@@ -48,7 +38,7 @@ PROMOTIONS = []  # Renseigner ici s'il y a des promotions actives
 
 def send_message(to, body):
     client.messages.create(
-        from_=whatsapp_number,
+        from_="whatsapp:+14155238886",
         body=body,
         to=to
     )
